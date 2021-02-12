@@ -40,10 +40,10 @@ std::vector<vertex> generate_data(){
     {
 
         float x = hsl_colorizer::normalize(i,0,n);
-        float l = cos(x*M_PI*2)-1;
-        l /= 2.f;
-        l = hsl_colorizer::normalize(l,0.6,0.85);
-        color = hsl_colorizer::full_lerp_hsl(x,1.f,l);
+//        float l = cos(x*M_PI*2)-1;
+//        l /= 2.f;
+//        l = (l+0.6)/
+        color = hsl_colorizer::full_lerp_hsl(x,1.f,0.75);
 //        std::vector<vertex> quad = create_quad(glm::vec2(x,0),res,);
 //        color = hsl_colorizer::jethsl(x,0.95f,0.75f);
 //        color = hsl_colorizer::jet(x);
