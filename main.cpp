@@ -32,7 +32,7 @@ std::vector<vertex> create_quad(glm::vec2 center, float res, hsl_colorizer::rgb 
 std::vector<vertex> generate_data(){
 
     float min = -1, max=1;
-    int n = 1000;
+    int n = 10;
     std::vector<vertex> vertices(n*4);
     float res = 2.f/(float)n;
     hsl_colorizer::rgb color;
@@ -40,11 +40,14 @@ std::vector<vertex> generate_data(){
     {
 
         float x = hsl_colorizer::normalize(i,0,n);
-        color = hsl_colorizer::full_lerp_hsl(x,1.f,0.5f);
+        float l = cos(x*M_PI*2)-1;
+        l /= 2.f;
+        l = hsl_colorizer::normalize(l,0.6,0.85);
+        color = hsl_colorizer::full_lerp_hsl(x,1.f,l);
 //        std::vector<vertex> quad = create_quad(glm::vec2(x,0),res,);
 //        color = hsl_colorizer::jethsl(x,0.95f,0.75f);
 //        color = hsl_colorizer::jet(x);
-//        color = hsl_colorizer::hsl_morgantrouvesaboxd(x);
+//        color = hsl_colorizer::morgantrouvesaboxd(x);
         x =x*2.f-1.f;
 
         std::vector<vertex> quad = create_quad(glm::vec2(x,0),res,color);
