@@ -29,10 +29,12 @@ std::vector<vertex> create_quad(glm::vec2 center, float res, hsl_colorizer::rgb 
 
 }
 
+int colorizer_switch = 0;
+constexpr int max_color = 5;
 std::vector<vertex> generate_data(){
 
     float min = -1, max=1;
-    int n = 10;
+    int n = 1000;
     std::vector<vertex> vertices(n*4);
     float res = 2.f/(float)n;
     hsl_colorizer::rgb color;
@@ -40,14 +42,26 @@ std::vector<vertex> generate_data(){
     {
 
         float x = hsl_colorizer::normalize(i,0,n);
-//        float l = cos(x*M_PI*2)-1;
-//        l /= 2.f;
-//        l = (l+0.6)/
-        color = hsl_colorizer::full_lerp_hsl(x,1.f,0.75);
-//        std::vector<vertex> quad = create_quad(glm::vec2(x,0),res,);
-//        color = hsl_colorizer::jethsl(x,0.95f,0.75f);
-//        color = hsl_colorizer::jet(x);
-//        color = hsl_colorizer::morgantrouvesaboxd(x);
+        float l = sin((x-0.5)*M_PI)+1;
+        l /= 2.f;
+        l = (1.-0.7)*l+0.7;
+        float t = x;
+        switch(colorizer_switch){
+        case 0:
+            color = hsl_colorizer::full_lerp_hsl(t,0.95,l);
+            break;
+        case 1:
+            color = hsl_colorizer::morgantrouvesaboxd(x);
+            break;
+        case 2:
+            color = hsl_colorizer::jethsl(x,0.95f,0.75f);
+            break;
+        case max_color:
+            color = hsl_colorizer::jet(x);
+            break;
+        default:
+            color = hsl_colorizer::jet(x);
+        }
         x =x*2.f-1.f;
 
         std::vector<vertex> quad = create_quad(glm::vec2(x,0),res,color);
@@ -90,10 +104,27 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
+static std::vector<vertex> vertices = generate_data();
+static GLuint vertex_buffer;
+bool isReady = false;
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    if(!isReady)
+        return;
+
+    colorizer_switch++;
+    if(max_color < colorizer_switch)
+        colorizer_switch=0;
+    vertices = generate_data();
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    glBufferSubData(GL_ARRAY_BUFFER,0,sizeof(vertex)*vertices.size(),vertices.data());
+}
+
+
 int main(void)
 {
     GLFWwindow* window;
-    GLuint vertex_buffer, vertex_shader, fragment_shader, program;
+    GLuint vertex_shader, fragment_shader, program;
     GLint mvp_location, vpos_location, vcol_location;
 
     glfwSetErrorCallback(error_callback);
@@ -112,13 +143,13 @@ int main(void)
     }
 
     glfwSetKeyCallback(window, key_callback);
+    glfwSetScrollCallback(window, scroll_callback);
 
     glfwMakeContextCurrent(window);
     gladLoadGL(glfwGetProcAddress);
     glfwSwapInterval(1);
+    vertices = generate_data();
 
-    // NOTE: OpenGL error checks have been omitted for brevity
-    std::vector<vertex> vertices = generate_data();
     glGenBuffers(1, &vertex_buffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex)*vertices.size(),vertices.data() , GL_STATIC_DRAW);
@@ -147,6 +178,7 @@ int main(void)
     glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
                           sizeof(vertices[0]), (void*) (sizeof(float) * 2));
 
+    isReady = true;
     while (!glfwWindowShouldClose(window))
     {
         float ratio;
